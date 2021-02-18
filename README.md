@@ -1,5 +1,5 @@
-TP Master Fusion confinement analysis for WEST
-==============================================
+TP Master Fusion: Confinement Analysis for WEST
+===============================================
 
 To execute the template load the tools_dc module:
 ```
