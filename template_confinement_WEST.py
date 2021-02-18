@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Confinement analysis WEST
+## Confinement analysis WEST
 
-# In[ ]:
-
+#%% Load modules
 
 import logging
 import matplotlib.pyplot as plt
@@ -45,47 +44,34 @@ except ImportError as err:
     print('WARNING: no module pywed, warning:', err)
     print(' ')
 
+#%% Plot style
+sns.set_style('whitegrid')
 
-# ## Read data
+# To plot in a new window type in console: %matplotlib qt5
 
-# ### C4
-
-# In[ ]:
-
+#%% Path to data
 
 pathfile = '/Imas_public/public/plateau_statistics/west/'
 filename = 'reduced_dataBase_C4_WEST.h'
 
 
-# In[ ]:
-
+#%% Read data
 
 stats = pd.read_hdf(pathfile+filename, key='stats')
 
 
-# In[ ]:
-
-
+#%%
 stats.shape
 
 
-# In[ ]:
-
-
+#%%
 stats.tail()
 
 
-# ## Example: computation radiated fraction and P_rad divertor
-
-# In[ ]:
-
+#%% Example: computation radiated fraction and P_rad divertor
 
 stats['P_radDiv_mean_plto']  = stats['P_rad_mean_plto'] \
                              - stats['P_radBulk_mean_plto']
-
-
-# In[ ]:
-
 
 stats['f_rad_mean_plto']     = stats['P_rad_mean_plto'] \
                              / stats['P_TOT_mean_plto']
@@ -94,36 +80,25 @@ stats['f_radBulk_mean_plto'] = stats['P_radBulk_mean_plto'] \
 stats['f_radDiv_mean_plto']  = stats['P_radDiv_mean_plto'] \
                              / stats['P_TOT_mean_plto']
 
-
-# In[ ]:
-
-
 stats[['P_radDiv_mean_plto', 'f_rad_mean_plto']].describe()
 
 
-# ## Filter data
-
-# In[ ]:
-
+#%% Filter data
 
 stats = stats[(stats['eq_q_95_mean_plto'] < 20.) \
+              & (stats['ne3_mean_plto'] > 0) \
               & (stats['P_COND_mean_plto'] > 0.) \
-              & (stats['f_rad_mean_plto'] > 0.26) \
+              & (stats['f_rad_mean_plto'] > 0.) \
               & (stats['eq_w_mhd_mean_plto'] > 0) \
-              & ((stats['shot'] < 55625) | (stats['shot'] > 55643))]
+              & (stats['contr_nelMax_mean_plto'] \
+                    / (stats['neVol_mean_plto']) < 0.2) \
+              & ((stats['shot'] < 55625) | (stats['shot'] > 55643))] # Filter wrong Te (ECE)
 
 
-# ## First shot after boronisation
-
-# In[ ]:
-
+#%% First shot after boronisation
 
 after_boro_shot = [53453, 54288, 54403, 54502, 54596, 54719, 54881, 55000, \
                    55138, 55499, 55548, 55747, 55795]
-
-
-# In[ ]:
-
 
 boro_shot_distance     = np.full(stats['shot'].size, np.nan)
 boro_shot_distance_all = np.full(len(after_boro_shot), np.nan)
@@ -143,42 +118,63 @@ for jj in range(stats['shot'].size):
 stats['boro_shot_distance'] = boro_shot_distance
 
 
-# In[ ]:
+#%% Plot (to plot in a new window type in console: %matplotlib qt5 )
 
+plt.figure(figsize=(9, 5))
 sns.set_context('talk', font_scale=0.95)
 plt.scatter(stats['shot'], stats['boro_shot_distance'])
 plt.xlabel('Shot number')
 plt.ylabel('Distance to boronisation')
+plt.tight_layout()
 
 
-# ## Helium shots
-
-# In[ ]:
-
+#%% Helium shots
 
 helium_shots = [(55230, 55498), (55827, 55987)]
-
-
-# In[ ]:
-
 
 for iishot in helium_shots:
     #print(iishot[0])
     stats = stats[(stats['shot'] < iishot[0]) | (stats['shot'] > iishot[1])]
 
-
-# In[ ]:
-
-
 stats.shape
 
 
-# ## Print columns
-
-# In[ ]:
-
+#%% Print columns
 
 for ii in stats.columns:
     if 'mean' in ii:
         print(ii)
 
+#%% Confinement scaling law
+
+# Quantities:
+# - eq_w_mhd_mean_plto : confinement time [s]
+# - Ip_mean_plto : toroidal current [A]
+# - eq_b0_mean_plto : toroidal magnetic field [T]
+# - P_TOT_mean_plto : total power (ohmic + auxiliary) [W]
+# - ne_line3_mean_plto : line averaged density [m^-3]
+# - eq_r0 : major radius [m]
+# - eq_minor_rad_mean_plto : minor radius [m]
+# - eq_elong_mean_plto : plasma elongation
+
+# Before performing the regression you can explore these variables
+# For example you can use histogram plots as:
+
+plt.figure(figsize=(9, 5))
+sns.set_context('talk', font_scale=0.95)
+(1E-6*stats['Ip_mean_plto']).hist(bins=20)
+plt.xlabel('Ip [MA]')
+plt.ylabel('Nbr. plateaus')
+plt.tight_layout()
+
+# Also to visualize relation between variables use scatter plots:
+
+plt.figure(figsize=(9, 5))
+sns.set_context('talk', font_scale=0.95)
+plt.scatter(1E-6*stats['Ip_mean_plto'], 1E-6*stats['eq_w_mhd_mean_plto'], \
+            c=1E-6*stats['P_TOT_mean_plto'], \
+            alpha=0.7, s=70, edgecolor='k', cmap='plasma', vmin=None, vmax=None)
+plt.xlabel('Ip [MA]')
+plt.ylabel(r'$W_{MHD}$ [MJ]')
+plt.colorbar(label=r'$P_{tot}$ [MW]')
+plt.tight_layout()
