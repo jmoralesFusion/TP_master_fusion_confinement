@@ -7,7 +7,6 @@
 
 import logging
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
 import numpy as np
 import os
 import pandas as pd
@@ -19,7 +18,7 @@ import scipy.signal as sc_sig
 from scipy.optimize import curve_fit
 import sklearn
 from sklearn.feature_selection import SelectKBest, mutual_info_regression
-from sklearn import datasets, linear_model
+from sklearn import linear_model
 from sklearn.metrics import mean_squared_error, r2_score
 print('Logging version:', logging.__version__)
 print('Matplotlib version:', matplotlib.__version__)
@@ -55,18 +54,78 @@ pathfile = '/Imas_public/public/plateau_statistics/west/'
 filename = 'reduced_dataBase_C4_WEST.h'
 
 
-#%% Read data
+#%% Read statistical data and signals names (keys)
 
-stats = pd.read_hdf(pathfile+filename, key='stats')
+stor = pd.HDFStore(pathfile+filename)
+stor_keys = []
+for ii in stor.keys():
+    stor_keys.append(ii)
+stats = stor['stats']
+stor.close()
 
 
-#%%
-stats.shape
+#%% Remove helium shots
 
+helium_shots = [(55230, 55498), (55827, 55987)]
 
-#%%
+for iishot in helium_shots:
+    #print(iishot[0])
+    stats = stats[(stats['shot'] < iishot[0]) | (stats['shot'] > iishot[1])]
+
+print('Stats shape:', stats.shape)
 stats.tail()
 
+#%% Read signals data
+
+sig = {}
+for ii in stor_keys:
+    if (('/signal/' in ii) and not ('contr_' in ii or 'gas_' in ii \
+        or 'specv_' in ii or 'lang_' in ii)):
+       print(ii.replace('/signal/', ''))
+       sig[ii.replace('/signal/', '')] = pd.read_hdf(pathfile+filename, key=ii)
+
+
+#%% Compute time relative to the plasma initiation (initiation at ignitron time)
+sig['time_rel'] = {}
+for ii in range(len(sig['time'])):
+    ishot = sig['time'].index[ii]
+    sig['time_rel'][ishot] = sig['time'][ishot] - sig['t_ignitron'][ishot]
+
+sig['time_rel'] = pd.Series(sig['time_rel'])
+
+
+#%% Plot W_mhd and total power as a function of time for shot 55799 with plateaus
+shot = 55799
+plt.figure(figsize=(9, 5))
+sns.set_context('talk', font_scale=0.95)
+plt.plot(sig['time_rel'][shot], 1E-6*sig['eq_w_mhd'][shot])
+for ii in range(stats.loc[shot].shape[0]):
+    t_ini = stats.loc[shot, 'tIni_plto'][ii]- stats.loc[shot, 't_ignitron'][ii]
+    t_end = stats.loc[shot, 'tEnd_plto'][ii]- stats.loc[shot, 't_ignitron'][ii]
+    t_plt = np.linspace(t_ini, t_end, 10)
+    y_plt = 1E-6*stats.loc[shot, 'eq_w_mhd_mean_plto'][ii]*np.ones(10)
+    plt.plot(t_plt, y_plt, label='Plateau '+str(ii), linewidth=4)
+plt.xlabel('Time [s]')
+plt.ylabel(r'$W_{MHD}$ [MJ]')
+plt.title('Shot '+str(shot))
+plt.legend()
+plt.tight_layout()
+
+#%%
+plt.figure(figsize=(9, 5))
+sns.set_context('talk', font_scale=0.95)
+plt.plot(sig['time_rel'][shot], 1E-6*sig['P_TOT'][shot])
+for ii in range(stats.loc[shot].shape[0]):
+    t_ini = stats.loc[shot, 'tIni_plto'][ii]- stats.loc[shot, 't_ignitron'][ii]
+    t_end = stats.loc[shot, 'tEnd_plto'][ii]- stats.loc[shot, 't_ignitron'][ii]
+    t_plt = np.linspace(t_ini, t_end, 10)
+    y_plt = 1E-6*stats.loc[shot, 'P_TOT_mean_plto'][ii]*np.ones(10)
+    plt.plot(t_plt, y_plt, label='Plateau '+str(ii), linewidth=4)
+plt.xlabel('Time [s]')
+plt.ylabel(r'$P_{tot}$ [MW]')
+plt.title('Shot '+str(shot))
+plt.legend()
+plt.tight_layout()
 
 #%% Example: computation radiated fraction and P_rad divertor
 
@@ -128,18 +187,7 @@ plt.ylabel('Distance to boronisation')
 plt.tight_layout()
 
 
-#%% Helium shots
-
-helium_shots = [(55230, 55498), (55827, 55987)]
-
-for iishot in helium_shots:
-    #print(iishot[0])
-    stats = stats[(stats['shot'] < iishot[0]) | (stats['shot'] > iishot[1])]
-
-stats.shape
-
-
-#%% Print columns
+#%% Print columns (only "mean" columns)
 
 for ii in stats.columns:
     if 'mean' in ii:
@@ -156,6 +204,7 @@ for ii in stats.columns:
 # - eq_r0 : major radius [m]
 # - eq_minor_rad_mean_plto : minor radius [m]
 # - eq_elong_mean_plto : plasma elongation
+# - Atomic mass of plasma particles can be fixed at 2 (deuterium)
 
 # Before performing the regression you can explore these variables
 # For example you can use histogram plots as:
@@ -178,3 +227,7 @@ plt.xlabel('Ip [MA]')
 plt.ylabel(r'$W_{MHD}$ [MJ]')
 plt.colorbar(label=r'$P_{tot}$ [MW]')
 plt.tight_layout()
+
+# To perform the linear regression you can use the linear_model module
+# imported from scikit-learn (see line 21 of this file)
+# More information: https://scikit-learn.org/stable/modules/linear_model.html
