@@ -76,14 +76,20 @@ for iishot in helium_shots:
 print('Stats shape:', stats.shape)
 stats.tail()
 
-#%% Read signals data
+#%% Read signals data if sig is not yet defined
+try:
+    sig
+except NameError:
+    sig = None
 
-sig = {}
-for ii in stor_keys:
-    if (('/signal/' in ii) and not ('contr_' in ii or 'gas_' in ii \
-        or 'specv_' in ii or 'lang_' in ii)):
-       print(ii.replace('/signal/', ''))
-       sig[ii.replace('/signal/', '')] = pd.read_hdf(pathfile+filename, key=ii)
+if sig is None:
+    sig = {}
+    for ii in stor_keys:
+        if (('/signal/' in ii) and not ('contr_' in ii or 'gas_' in ii \
+            or 'specv_' in ii or 'lang_' in ii or 'dist_wall_' in ii \
+            or 'bolo_inv_' in ii or '_resist' in ii or '_phase' in ii)):
+           print(ii.replace('/signal/', ''))
+           sig[ii.replace('/signal/', '')] = pd.read_hdf(pathfile+filename, key=ii)
 
 
 #%% Compute time relative to the plasma initiation (initiation at ignitron time)
