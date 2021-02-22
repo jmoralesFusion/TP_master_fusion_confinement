@@ -103,7 +103,7 @@ sig['time_rel'] = pd.Series(sig['time_rel'])
 
 #%% Plot W_mhd and total power as a function of time for shot 55799 with plateaus
 shot = 55799
-plt.figure(figsize=(9, 5))
+plt.figure()
 sns.set_context('talk', font_scale=0.95)
 plt.plot(sig['time_rel'][shot], 1E-6*sig['eq_w_mhd'][shot])
 for ii in range(stats.loc[shot].shape[0]):
@@ -119,7 +119,7 @@ plt.legend()
 plt.tight_layout()
 
 #%%
-plt.figure(figsize=(9, 5))
+plt.figure()
 sns.set_context('talk', font_scale=0.95)
 plt.plot(sig['time_rel'][shot], 1E-6*sig['P_TOT'][shot])
 for ii in range(stats.loc[shot].shape[0]):
@@ -186,7 +186,7 @@ stats['boro_shot_distance'] = boro_shot_distance
 
 #%% Plot (to plot in a new window type in console: %matplotlib qt5 )
 
-plt.figure(figsize=(9, 5))
+plt.figure()
 sns.set_context('talk', font_scale=0.95)
 plt.scatter(stats['shot'], stats['boro_shot_distance'])
 plt.xlabel('Shot number')
@@ -203,7 +203,7 @@ for ii in stats.columns:
 #%% Confinement scaling law
 
 # Quantities:
-# - eq_w_mhd_mean_plto : confinement time [s]
+# - eq_w_mhd_mean_plto : plasma energy [J]
 # - Ip_mean_plto : toroidal current [A]
 # - eq_b0_mean_plto : toroidal magnetic field [T]
 # - P_TOT_mean_plto : total power (ohmic + auxiliary) [W]
@@ -216,7 +216,7 @@ for ii in stats.columns:
 # Before performing the regression you can explore these variables
 # For example you can use histogram plots as:
 
-plt.figure(figsize=(9, 5))
+plt.figure()
 sns.set_context('talk', font_scale=0.95)
 (1E-6*stats['Ip_mean_plto']).hist(bins=20)
 plt.xlabel('Ip [MA]')
@@ -225,7 +225,7 @@ plt.tight_layout()
 
 # Also to visualize relation between variables use scatter plots:
 
-plt.figure(figsize=(9, 5))
+plt.figure()
 sns.set_context('talk', font_scale=0.95)
 plt.scatter(1E-6*stats['Ip_mean_plto'], 1E-6*stats['eq_w_mhd_mean_plto'], \
             c=1E-6*stats['P_TOT_mean_plto'], \
