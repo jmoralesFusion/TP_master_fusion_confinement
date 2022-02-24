@@ -57,7 +57,7 @@ filename = 'reduced_dataBase_C4_WEST.h'
 
 #%% Read statistical data and signals names (keys)
 
-stor = pd.HDFStore(pathfile+filename)
+stor = pd.HDFStore(pathfile+filename, mode='r')
 stor_keys = []
 for ii in stor.keys():
     stor_keys.append(ii)
@@ -87,7 +87,9 @@ if sig is None:
     for ii in stor_keys:
         if (('/signal/' in ii) and not ('contr_' in ii or 'gas_' in ii \
             or 'specv_' in ii or 'lang_' in ii or 'dist_wall_' in ii \
-            or 'bolo_inv_' in ii or '_resist' in ii or '_phase' in ii)):
+            or 'bolo_inv_' in ii or '_resist' in ii or '_phase' in ii \
+            or 'hxr_' in ii or 'eq_beta_pol' in ii or 'ir_' in ii \
+            or 'two_pt_' in ii or 'zeff_line_' in ii)):
            print(ii.replace('/signal/', ''))
            sig[ii.replace('/signal/', '')] = pd.read_hdf(pathfile+filename, key=ii)
 
@@ -170,7 +172,7 @@ boro_shot_distance     = np.full(stats['shot'].size, np.nan)
 boro_shot_distance_all = np.full(len(after_boro_shot), np.nan)
 for jj in range(stats['shot'].size):
     for ii in range(len(after_boro_shot)):
-        boro_shot_distance_all[ii] = stats['shot'][jj] - after_boro_shot[ii]
+        boro_shot_distance_all[ii] = stats['shot'].iloc[jj] - after_boro_shot[ii]
     if (~np.all(boro_shot_distance_all < 0) \
         and ~np.all(np.isnan(boro_shot_distance_all))):
         try:
@@ -178,7 +180,7 @@ for jj in range(stats['shot'].size):
               np.nanmin(boro_shot_distance_all[boro_shot_distance_all >= 0])
         except:
             print(jj)
-            print(stats['shot'][jj])
+            print(stats['shot'].iloc[jj])
             print(boro_shot_distance_all)
             raise
 stats['boro_shot_distance'] = boro_shot_distance
