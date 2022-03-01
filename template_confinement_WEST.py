@@ -51,7 +51,7 @@ sns.set_style('whitegrid')
 
 #%% Path to data
 
-pathfile = '~/'
+pathfile = '../data/'
 filename = 'reduced_dataBase_C4_WEST.h'
 
 
