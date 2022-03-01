@@ -51,7 +51,7 @@ sns.set_style('whitegrid')
 
 #%% Path to data
 
-pathfile = '/Imas_public/public/plateau_statistics/west/'
+pathfile = '~/'
 filename = 'reduced_dataBase_C4_WEST.h'
 
 
@@ -77,6 +77,7 @@ print('Stats shape:', stats.shape)
 stats.tail()
 
 #%% Read signals data if sig is not yet defined
+'''
 try:
     sig
 except NameError:
@@ -135,6 +136,7 @@ plt.ylabel(r'$P_{tot}$ [MW]')
 plt.title('Shot '+str(shot))
 plt.legend()
 plt.tight_layout()
+'''
 
 #%% Example: computation radiated fraction and P_rad divertor
 
