@@ -29,8 +29,13 @@ print('Seaborn version:', sns.__version__)
 print('Scipy version:', scipy.__version__)
 print('Sklearn version:', sklearn.__version__)
 
-# Local modules
-import imas
+# Optional local modules
+try:
+    import imas
+except ImportError as err:
+    print(' ')
+    print('WARNING: no module imas, warning:', err)
+    print(' ')
 try:
     import imas_west
 except ImportError as err:
@@ -76,7 +81,7 @@ for iishot in helium_shots:
 print('Stats shape:', stats.shape)
 stats.tail()
 
-#%% Read signals data if sig is not yet defined
+#%% Optional read signals data if sig is not yet defined
 '''
 try:
     sig
